@@ -1,0 +1,61 @@
+class Ram(object):
+    def __init__(self):
+        """
+        8 bit value in each Memory-cell there are 4096 such cells
+        
+        """
+        self.Memory = []
+        for i in range(4096):
+            self.Memory.append(0)
+            
+            
+        self.sprites = [0xF0, 0x90, 0x90, 0x90, 0xF0,#0
+        0x20, 0x60, 0x20, 0x20, 0x70,#1
+        0xF0, 0x10, 0xF0, 0x80, 0xF0,#2
+        0xF0, 0x10, 0xF0, 0x10, 0xF0,#3
+        0x90, 0x90, 0xF0, 0x10, 0x10,#4
+        0xF0, 0x80, 0xF0, 0x10, 0xF0,#5
+        0xF0, 0x80, 0xF0, 0x90, 0xF0,#6
+        0xF0, 0x10, 0x20, 0x40, 0x40,#7
+        0xF0, 0x90, 0xF0, 0x90, 0xF0,#8
+        0xF0, 0x90, 0xF0, 0x10, 0xF0,#9
+        0xF0, 0x90, 0xF0, 0x90, 0x90,#10
+        0xE0, 0x90, 0xE0, 0x90, 0xE0,#11
+        0xF0, 0x80, 0x80, 0x80, 0xF0,#12
+        0xE0, 0x90, 0x90, 0x90, 0xE0,#13
+        0xF0, 0x80, 0xF0, 0x80, 0xF0,#14
+        0xF0, 0x80, 0xF0, 0x80, 0x80]
+        
+        for i in range(len(self.sprites)):
+            self.Memory[i] = self.sprites[i]
+        
+            
+    def get_loc(self,loc):
+        return self.Memory[loc]
+    
+    def set_loc(self,loc,val):
+        self.Memory[loc] = val 
+        
+        
+    def load(self,loc):
+        count = 0x200
+        with open(loc, 'br') as f:
+            data = f.read(1)
+            
+            while data:
+                self.Memory[count] = int.from_bytes(data,"little")
+                
+                data = f.read(1)
+                count += 1
+                
+        
+
+        
+        
+    
+        
+    
+    
+            
+            
+    
