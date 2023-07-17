@@ -414,9 +414,3 @@ class Processor(object):
             y_cor += 1
             loc += 1
             
-        
-    
-    def Execute(self):
-        pass
-        
-
