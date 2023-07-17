@@ -9,8 +9,10 @@ class Keyboard(object):
 		self.mapping = { 
 		} 
 
-	for i in range(16):
-		self.dic[i] = False
+		for i in range(15):
+			self.dic[i] = False
+
+	
 
 
 	def __str__(self):
