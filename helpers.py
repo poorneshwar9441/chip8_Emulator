@@ -5,6 +5,7 @@ def First_N_Bits(num,start,end,size1):
     bit_vec = []
     for i in range(start,end):
         bit_vec.append(bits[i])
+    #print("Here 2",bit_vec)
         
     return int(BitVector(bitlist = bit_vec))
         

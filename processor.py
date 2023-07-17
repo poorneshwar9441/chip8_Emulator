@@ -4,6 +4,7 @@ from helpers import First_N_Bits as F_N
 from helpers import Merge_Instructions,BitVector
 import random
 import pygame as pg
+from keyboard import Keyboard
 
 class Processor(object):
     
@@ -13,6 +14,7 @@ class Processor(object):
         self.Ram.load(file)
         self.pc = 0x200
         self.display = screen
+        self.keyboard = Keyboard()
        
         self.Vf_flag = Register()
         for i in range(16):
@@ -36,12 +38,6 @@ class Processor(object):
                 
             self.Disp_values.append(x)
                 
-    
-        
-    
-            
-    
-        
     def fetch(self):
         """
         Each instruction is 2bytes long
@@ -135,6 +131,9 @@ class Processor(object):
         elif(first_op == 7):
             print("Ins9")
             self.VRegistors[second_op].value += instruction2
+
+            if(self.VRegistors[second_op].value > 255):
+                self.VRegistors[second_op].value = self.VRegistors[second_op].value - 256
             
             
         elif(first_op == 8):
@@ -191,23 +190,23 @@ class Processor(object):
                 else:
                     self.Vf_flag.value = 0
                     
-                self.VRegistors[second_op].value = self.VRegistors[second_op].value/2
+                self.VRegistors[second_op].value = int(self.VRegistors[second_op].value/2)
                 
             elif(Fourth_op == 7):
                 print("Ins17")
                 
                 
-                if(self.VRegistors[second_op].value > self.VRegistors[Third_op].value):
-                    self.Vf_flag.value = 0
-                else:
+                if(self.VRegistors[Third_op].value > self.VRegistors[second_op].value):
                     self.Vf_flag.value = 1
+                else:
+                    self.Vf_flag.value = 0
                     
-                self.VRegistors[second_op].value = self.VRegistors[second_op].value - self.VRegistors[Third_op].value
+                self.VRegistors[second_op].value = self.VRegistors[Third_op].value - self.VRegistors[second_op].value
                 if(self.VRegistors[second_op].value < 0):
                     self.VRegistors[second_op].value += 256
                     
                     
-            elif(Fourth_op == 14):
+            elif(Fourth_op == 0xE):
                 print("Ins18")
                 bits_vx = BitVector(intVal = self.VRegistors[second_op].value,size = 8)
                 if(bits_vx[0] == 1):
@@ -216,6 +215,8 @@ class Processor(object):
                     self.Vf_flag.value = 0
                     
                 self.VRegistors[second_op].value = self.VRegistors[second_op].value*2
+                if(self.VRegistors[second_op].value > 255):
+                    self.VRegistors[second_op].value = self.VRegistors[second_op].value - 256
                 
                 
         elif(first_op == 9):
@@ -227,6 +228,7 @@ class Processor(object):
         elif(first_op == 0xA):
             print("Ins20")
             self.I.value = F_N(int(Merged_Ins),4,16,16)
+            print("I value",self.I.value)
             
         elif(first_op == 0xB):
             print("Ins21")
@@ -245,7 +247,25 @@ class Processor(object):
             
         elif(first_op == 0xE):
             #key Board Handler
-            pass
+            print("IN keyboard Instruction")
+            
+
+            #skip if pressed
+            if(instruction2 == 0x9E):
+                #skip next if its pressed
+                print("ulala nnnnnnnnnnnnnnnnnn",second_op)
+                if(self.keyboard.dic[second_op]):
+                    self.pc += 2
+
+
+            #skip if not pressed
+            if(instruction2 == 0xA1):
+                print("not pressednnnnnnnnnnnn",second_op)
+                self.keyboard.dic[second_op]
+                if(not self.keyboard.dic[second_op]):
+                    print("skipped")
+                    self.pc += 2
+
         
         elif(first_op == 0xF):
             
@@ -255,7 +275,33 @@ class Processor(object):
                 
             if(instruction2 == 0x0A):
                 #wait for a Key press
-                pass
+                print("KEYY PRESS wait")
+                while True:
+                    event = pg.event.wait()
+
+                    if(event.type == pg.KEYDOWN):
+
+                        if(((event.key - ord('a')) >= 0) and ((event.key- ord('a')) <= 5)):
+                            self.VRegistors[second_op].value = event.key - ord('a') + 10
+                            print("Here",self.VRegistors[second_op].value)
+
+                            for i in range(1,16):
+                                self.keyboard.dic[i] = False
+                            self.keyboard.dic[event.key - ord('a') + 10] = True
+
+
+
+                        elif(((event.key - ord('0')) >= 0) and ((event.key-ord('0')) <= 9)):
+                            self.VRegistors[second_op].value = event.key - ord('0')
+
+                            for i in range(1,16):
+                                self.keyboard.dic[i] = False
+                            self.keyboard.dic[event.key - ord('0')] = True
+
+
+                        print(self.keyboard)
+                        break
+                        #break
             
             if(instruction2 == 0x15):
                 print("Ins25")
@@ -268,29 +314,46 @@ class Processor(object):
             if(instruction2 == 0x1E):
                 print("Ins27")
                 self.I.value = self.I.value + self.VRegistors[second_op].value
+
+                if(self.I.value > (2**16)-1):
+                    self.I.value = self.I.value - 2**16
                 
                 
             if(instruction2 == 0x29):
                 print("Ins28")
                 self.I.value = self.VRegistors[second_op].value*5
+
+                if(self.I.value > (2**16)-1):
+                    self.I.value = self.I.value - 2**16
+                print("Ival",self.I.value)
+
                 
             if(instruction2 == 0x33):
                 print("Ins29")
-                vx = self.VRegistors[second_op].value
-                vx_100s = int(vx/100)
-                vx_ones = vx%10
-                vx = vx/10
-                vx_10s = vx%10
+                v = self.VRegistors[second_op].value
+                print(v)
+
+                digits = []
+                while(v):
+                    dig = v%10
+                    digits.append(dig)
+                    v = int(v/10)
+
+                while(len(digits) < 3):
+                    digits.append(0)
+
+                print(digits)
                 
-                self.Ram.set_loc(self.I.value,vx_100s)
-                self.Ram.set_loc(self.I.value+1,vx_10s)
-                self.Ram.set_loc(self.I.value+2,vx_ones)
+            
+                self.Ram.set_loc(self.I.value,digits[2])
+                self.Ram.set_loc(self.I.value+1,digits[1])
+                self.Ram.set_loc(self.I.value+2,digits[0])
                 
                 
             if(instruction2 == 0x55):
                 print("Ins30")
                 loc = self.I.value
-                for i in range(second_op+1):
+                for i in range(second_op):
                     self.Ram.set_loc(loc,self.VRegistors[i].value)
                     loc += 1
                     
@@ -298,7 +361,7 @@ class Processor(object):
             if(instruction2 == 0x65):
                 print("Ins31")
                 loc = self.I.value
-                for i in range(second_op+1):
+                for i in range(second_op):
                     self.VRegistors[i].value = self.Ram.get_loc(loc)
                     loc += 1
                     
